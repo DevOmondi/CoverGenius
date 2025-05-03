@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CreditCard, Check } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 import { usePayment } from '../../contexts/PaymentContext';
 
 const PaymentForm: React.FC = () => {
