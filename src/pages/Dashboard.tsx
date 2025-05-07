@@ -11,6 +11,7 @@ const Dashboard: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
   const [activeTab, setActiveTab] = useState("paste");
+  const [editedContent, setEditedContent] = useState("");
   const { hasPaid, setHasPaid } = usePayment();
   const { showError, ToastContainer } = useToast();
 
@@ -157,6 +158,7 @@ const Dashboard: React.FC = () => {
             <CoverLetterDisplay
               content={coverLetter}
               onPaymentInitiated={handlePaymentInitiated}
+              onContentChange={setEditedContent}
             />
           </div>
         )}
@@ -167,7 +169,7 @@ const Dashboard: React.FC = () => {
             <h2 className="text-xl font-semibold mb-4">
               Step 3: Download Options
             </h2>
-            <DownloadOptions content={coverLetter} />
+            <DownloadOptions content={editedContent || coverLetter} />
           </div>
         )}
       </div>

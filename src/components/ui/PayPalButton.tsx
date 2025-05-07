@@ -21,7 +21,7 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({
       }}
     >
       <PayPalButtons
-        style={{ layout: "vertical" }}
+        style={{ layout: "vertical", shape: "rect", color: "gold" }}
         createOrder={(data, actions) => {
           return actions.order.create({
             purchase_units: [

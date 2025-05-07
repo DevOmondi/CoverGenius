@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { FileText, Download, Copy, Check, FileSpreadsheet } from "lucide-react";
 
 interface DownloadOptionsProps {
@@ -8,6 +9,8 @@ interface DownloadOptionsProps {
 const DownloadOptions: React.FC<DownloadOptionsProps> = ({ content }) => {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const handleCopy = async () => {
     try {
@@ -30,30 +33,74 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({ content }) => {
   };
 
   const openInGoogleDocs = () => {
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const docsUrl = `https://docs.google.com/document/create?usp=import&url=${encodeURIComponent(
-      url
-    )}`;
-    window.open(docsUrl, "_blank");
+    try {
+      // Create a data URI with the content
+      const dataUri = `data:text/plain;charset=utf-8,${encodeURIComponent(
+        content
+      )}`;
+
+      // Google Docs import URL with the data URI
+      const docsUrl = `https://docs.google.com/document/create?usp=import&url=${encodeURIComponent(
+        dataUri
+      )}`;
+
+      // Open in new tab
+      window.open(docsUrl, "_blank");
+    } catch (error) {
+      console.error("Error opening in Google Docs:", error);
+      // Fallback to simple text import
+      const blob = new Blob([content], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      window.open(
+        `https://docs.google.com/document/create?usp=import&url=${encodeURIComponent(
+          url
+        )}`,
+        "_blank"
+      );
+    }
   };
 
+  // Hande download for pdf and docx
   const handleDownload = async (format: string) => {
     setDownloading(format);
 
     try {
       switch (format) {
-        case "pdf":
-          // For actual PDF generation, you would typically call your backend API
-          // This is a fallback to download as text file
-          downloadTextFile("txt");
-          break;
+        case "pdf": {
+          const response = await axios.post(
+            `${API_BASE_URL}/api/documents/generate-pdf`,
+            { text: content },
+            { responseType: "blob" }
+          );
 
-        case "docx":
-          // For actual DOCX generation, you would typically call your backend API
-          // This is a fallback to download as text file
-          downloadTextFile("txt");
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", "cover-letter.pdf");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
           break;
+        }
+
+        case "docx": {
+          const response = await axios.post(
+            `${API_BASE_URL}/api/documents/generate-docx`,
+            { text: content },
+            { responseType: "blob" }
+          );
+
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", "cover-letter.docx");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          break;
+        }
 
         case "google":
           openInGoogleDocs();
@@ -76,7 +123,7 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({ content }) => {
         <div>
           <p className="text-green-800 font-medium">Payment successful!</p>
           <p className="text-green-700 text-sm mt-1">
-            You can now download your cover letter in multiple formats or copy
+            You can now edit and download your cover letter in multiple formats or copy
             the content.
           </p>
         </div>
